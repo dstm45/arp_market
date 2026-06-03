@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
 import argparse
 import sys
-from scapy.all import sniff, IP, TCP, UDP, ICMP, PcapWriter
+
+from scapy.all import ICMP, IP, TCP, UDP, PcapWriter, sniff
 
 # --- BLOC L3 : LES COMPTEURS POUR LE BILAN FINAL ---
 # On crée un dictionnaire pour compter les paquets exigés par le sujet
@@ -24,8 +24,8 @@ def analyser_paquet(packet):
     if IP in packet:
         ip_src = packet[IP].src
         ip_dst = packet[IP].dst
-        horodatage = packet.time # Récupère l'heure précise de capture
-        
+        horodatage = packet.time  # Récupère l'heure précise de capture
+
         protocole = "Inconnu"
         port_src = "-"
         port_dst = "-"
@@ -36,23 +36,25 @@ def analyser_paquet(packet):
             port_src = packet[TCP].sport
             port_dst = packet[TCP].dport
             compteurs["TCP"] += 1
-            
+
         elif UDP in packet:
             protocole = "UDP"
             port_src = packet[UDP].sport
             port_dst = packet[UDP].dport
             compteurs["UDP"] += 1
-            
+
         elif ICMP in packet:
             protocole = "ICMP"
             compteurs["ICMP"] += 1
 
         # 4. On prépare la ligne de résumé au format texte demandé
-        ligne_resume = f"[{horodatage}] {protocole} | {ip_src}:{port_src} -> {ip_dst}:{port_dst}"
-        
+        ligne_resume = (
+            f"[{horodatage}] {protocole} | {ip_src}:{port_src} -> {ip_dst}:{port_dst}"
+        )
+
         # On l'affiche sur ton terminal
         print(ligne_resume)
-        
+
         # On l'écrit en simultané dans ton fichier de log texte
         if log_fichier:
             log_fichier.write(ligne_resume + "\n")
@@ -64,8 +66,12 @@ def main():
 
     # Configuration des arguments de la ligne de commande (-i et -f)
     parser = argparse.ArgumentParser(description="Renifleur générique - TP1 Partie A")
-    parser.add_argument("-i", "--interface", required=True, help="Interface réseau (ex: eth0)")
-    parser.add_argument("-f", "--filtre", default="", help="Filtre BPF (ex: 'tcp port 80')")
+    parser.add_argument(
+        "-i", "--interface", required=True, help="Interface réseau (ex: eth0)"
+    )
+    parser.add_argument(
+        "-f", "--filtre", default="", help="Filtre BPF (ex: 'tcp port 80')"
+    )
     args = parser.parse_args()
 
     try:
@@ -74,7 +80,7 @@ def main():
         log_fichier = open("capture.log", "a", encoding="utf-8")
 
         print(f"[*] Capture en cours sur {args.interface}...")
-        
+
         # Lancement de la fonction de capture de Scapy
         # prn=analyser_paquet signifie : 'Exécute ma fonction à chaque paquet capturé'
         sniff(iface=args.interface, filter=args.filtre, prn=analyser_paquet, store=0)
@@ -82,20 +88,21 @@ def main():
     # --- BLOC 3 : LA GESTION DE L'ARRÊT PROPRE (Ctrl+C) ---
     except KeyboardInterrupt:
         print("\n[-] Capture interrompue par l'utilisateur.")
-        
+
     finally:
         # Fermeture sécurisée des fichiers pour valider l'écriture sur le disque
         if pcap_fichier:
             pcap_fichier.close()
         if log_fichier:
             log_fichier.close()
-        
+
         # Affichage du bilan final obligatoire
-        print("\n" + "="*10 + " BILAN DES PAQUETS CAPTURÉS " + "="*10)
+        print("\n" + "=" * 10 + " BILAN DES PAQUETS CAPTURÉS " + "=" * 10)
         print(f" Paquets TCP  : {compteurs['TCP']}")
         print(f" Paquets UDP  : {compteurs['UDP']}")
         print(f" Paquets ICMP : {compteurs['ICMP']}")
-        print("="*48)
+        print("=" * 48)
+
 
 if __name__ == "__main__":
     main()
