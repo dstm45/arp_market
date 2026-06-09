@@ -2,20 +2,24 @@
 # -*- coding: utf-8 -*-
 # Script 2 : Capture et stockage brut (Wireshark)
 
-from scapy.all import sniff, PcapWriter
+from scapy.all import PcapWriter, sniff
 
 print("[*] Initialisation du fichier de stockage 'capture_brute.pcap'...")
 # Ouverture du fichier de persistance sur le disque
 pcap_writer = PcapWriter("capture_brute.pcap", append=True, sync=True)
 
+
 def capturer_et_sauvegarder(packet):
     # Capture et écriture immédiate du paquet brut
     pcap_writer.write(packet)
-    print(".", end="", flush=True) # Indicateur visuel de capture
+    print(".", end="", flush=True)  # Indicateur visuel de capture
+
 
 try:
-    print("[*] Capture et enregistrement en cours sur eth0... (Faites Ctrl+C pour arrêter)")
-    sniff(iface="eth0", prn=capturer_et_sauvegarder, store=0)
+    print(
+        "[*] Capture et enregistrement en cours sur eth0... (Faites Ctrl+C pour arrêter)"
+    )
+    sniff(iface="wlan0", prn=capturer_et_sauvegarder, store=0)
 except KeyboardInterrupt:
     print("\n[*] Arrêt de la capture.")
 finally:
